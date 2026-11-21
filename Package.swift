@@ -4,21 +4,35 @@
 // does not provide any Swift API of its own; consumers import the C module and
 // use libjpeg's normal C interface.
 
+import Foundation
 import PackageDescription
+
+// static unless SWIFT_COLLECTIVE_DYNAMIC_LIBRARIES=1, which a host linking this into several
+// dynamic frameworks sets so they share one copy instead of each carrying its own
+// windows stays static since a dynamic C library there exports nothing
+#if os(Windows)
+  let sharedLinkage: Product.Library.LibraryType? = nil
+#else
+  let sharedLinkage: Product.Library.LibraryType? =
+    ProcessInfo.processInfo.environment["SWIFT_COLLECTIVE_DYNAMIC_LIBRARIES"] == "1" ? .dynamic : nil
+#endif
 
 let package = Package(
   name: "libjpegturbo",
   products: [
     .library(
       name: "JPEGTurbo",
+      type: sharedLinkage,
       targets: ["JPEGTurbo"]
     ),
     .library(
       name: "jpeg",
+      type: sharedLinkage,
       targets: ["jpeg"]
     ),
     .library(
       name: "turbojpeg",
+      type: sharedLinkage,
       targets: ["turbojpeg"]
     ),
   ],
